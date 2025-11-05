@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ScanDBX - File List</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 50px; }
+        .container { max-width: 600px; margin: 0 auto; }
+        .file-list { margin: 20px 0; }
+        .file-item { 
+            padding: 10px; 
+            border: 1px solid #ddd; 
+            margin: 5px 0; 
+            border-radius: 3px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .open-btn {
+            padding: 5px 15px;
+            background: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 3px;
+            font-size: 14px;
+            margin-right: 5px;
+        }
+        .open-btn:hover { background: #0056b3; }
+        .delete-btn {
+            padding: 5px 15px;
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        .delete-btn:hover { background: #c82333; }
+        .file-actions { display: flex; }
+        .back-btn { 
+            display: inline-block; 
+            padding: 10px 20px; 
+            background: #6c757d; 
+            color: white; 
+            text-decoration: none; 
+            border-radius: 5px; 
+            margin-bottom: 20px; 
+        }
+        .back-btn:hover { background: #545b62; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="{{ url_for('index') }}" class="back-btn">← Back to Menu</a>
+        <h2>Uploaded Files</h2>
+        
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <div style="padding: 10px; margin: 10px 0; border-radius: 4px; {% if 'successfully' in message %}background: #d4edda; color: #155724; border: 1px solid #c3e6cb;{% else %}background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb;{% endif %}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        <div class="file-list">
+            {% if files %}
+                {% for file in files %}
+                    <div class="file-item">
+                        <span>{{ file }}</span>
+                        <div class="file-actions">
+                            <a href="{{ url_for('view_file', filename=file) }}" class="open-btn" target="_blank">Open</a>
+                            {% if session.username == 'admin' %}
+                                <form method="POST" action="{{ url_for('delete_file', filename=file) }}" style="display: inline;" onsubmit="return confirm('Delete {{ file }}?')">
+                                    <button type="submit" class="delete-btn">Delete</button>
+                                </form>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p>No files uploaded yet.</p>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

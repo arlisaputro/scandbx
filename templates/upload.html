@@ -30,7 +30,10 @@
     <div class="container">
         <div class="header">
             <h2>Upload Image/PDF</h2>
-            <a href="{{ url_for('logout') }}" class="logout-btn">Logout</a>
+            <div>
+                <a href="{{ url_for('index') }}" style="margin-right: 10px; padding: 8px 16px; background: #6c757d; color: white; text-decoration: none; border-radius: 4px;">← Menu</a>
+                <a href="{{ url_for('logout') }}" class="logout-btn">Logout</a>
+            </div>
         </div>
         
         {% with messages = get_flashed_messages() %}
