@@ -55,10 +55,8 @@ def view_file(filename):
     if 'username' not in session:
         return redirect(url_for('login'))
     try:
-        url = s3_client.generate_presigned_url('get_object',
-                                               Params={'Bucket': app.config['S3_BUCKET'], 'Key': filename},
-                                               ExpiresIn=3600)
-        return redirect(url)
+        response = s3_client.get_object(Bucket=app.config['S3_BUCKET'], Key=filename)
+        return response['Body'].read(), 200, {'Content-Type': response['ContentType']}
     except ClientError:
         flash('File not found')
         return redirect(url_for('file_list'))
