@@ -55,7 +55,8 @@ def view_file(filename):
     try:
         url = s3_client.generate_presigned_url('get_object',
                                                Params={'Bucket': app.config['S3_BUCKET'], 'Key': filename},
-                                               ExpiresIn=3600)
+                                               ExpiresIn=3600,
+                                               Config=boto3.session.Config(region_name='ap-southeast-3'))
         return redirect(url)
     except ClientError:
         flash('File not found')
