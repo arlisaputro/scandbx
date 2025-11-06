@@ -2,14 +2,16 @@ from flask import Flask, render_template, request, redirect, url_for, flash, ses
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 import os
+import boto3
+from botocore.exceptions import ClientError
 
 app = Flask(__name__)
 app.secret_key = 'your-secret-key-change-this'
-app.config['UPLOAD_FOLDER'] = 'uploads'
+app.config['S3_BUCKET'] = 'scandbx-file-bucket'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 
-# Create upload directory
-os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+# Initialize S3 client
+s3_client = boto3.client('s3', region_name='ap-southeast-3')
 
 # Simple user storage (use database in production)
 users = {
@@ -38,14 +40,26 @@ def upload_page():
 def file_list():
     if 'username' not in session:
         return redirect(url_for('login'))
-    files = os.listdir(app.config['UPLOAD_FOLDER'])
+    try:
+        response = s3_client.list_objects_v2(Bucket=app.config['S3_BUCKET'])
+        files = [obj['Key'] for obj in response.get('Contents', [])]
+    except ClientError:
+        files = []
+        flash('Error accessing S3 bucket')
     return render_template('file_list.html', files=files)
 
 @app.route('/view_file/<filename>')
 def view_file(filename):
     if 'username' not in session:
         return redirect(url_for('login'))
-    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+    try:
+        url = s3_client.generate_presigned_url('get_object',
+                                               Params={'Bucket': app.config['S3_BUCKET'], 'Key': filename},
+                                               ExpiresIn=3600)
+        return redirect(url)
+    except ClientError:
+        flash('File not found')
+        return redirect(url_for('file_list'))
 
 @app.route('/delete_file/<filename>', methods=['POST'])
 def delete_file(filename):
@@ -55,12 +69,11 @@ def delete_file(filename):
         flash('Access denied. Admin only.')
         return redirect(url_for('file_list'))
     
-    filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-    if os.path.exists(filepath):
-        os.remove(filepath)
+    try:
+        s3_client.delete_object(Bucket=app.config['S3_BUCKET'], Key=filename)
         flash(f'File {filename} deleted successfully!')
-    else:
-        flash('File not found.')
+    except ClientError:
+        flash('Error deleting file')
     return redirect(url_for('file_list'))
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -97,9 +110,11 @@ def upload_file():
     
     if file and allowed_file(file.filename):
         filename = secure_filename(file.filename)
-        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-        file.save(filepath)
-        flash(f'File {filename} uploaded successfully!')
+        try:
+            s3_client.upload_fileobj(file, app.config['S3_BUCKET'], filename)
+            flash(f'File {filename} uploaded successfully!')
+        except ClientError:
+            flash('Error uploading file to S3')
         return redirect(url_for('upload_page'))
     
     flash('Invalid file type. Only PDF, JPG, JPEG, PNG allowed.')
