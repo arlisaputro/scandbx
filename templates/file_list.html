@@ -53,6 +53,16 @@
         <a href="{{ url_for('index') }}" class="back-btn">← Back to Menu</a>
         <h2>Uploaded Files</h2>
         
+        <div style="margin: 20px 0; display: flex; gap: 10px; align-items: center;">
+            <span style="font-weight: bold;">Show files from:</span>
+            <a href="{{ url_for('file_list', filter='all') }}" 
+               style="padding: 8px 16px; text-decoration: none; border-radius: 4px; {% if current_filter == 'all' %}background: #007bff; color: white;{% else %}background: #e9ecef; color: #495057;{% endif %}">All</a>
+            <a href="{{ url_for('file_list', filter='s3') }}" 
+               style="padding: 8px 16px; text-decoration: none; border-radius: 4px; {% if current_filter == 's3' %}background: #007bff; color: white;{% else %}background: #e9ecef; color: #495057;{% endif %}">S3 Only</a>
+            <a href="{{ url_for('file_list', filter='local') }}" 
+               style="padding: 8px 16px; text-decoration: none; border-radius: 4px; {% if current_filter == 'local' %}background: #007bff; color: white;{% else %}background: #e9ecef; color: #495057;{% endif %}">Local Only</a>
+        </div>
+        
         {% with messages = get_flashed_messages() %}
             {% if messages %}
                 {% for message in messages %}
@@ -66,11 +76,11 @@
             {% if files %}
                 {% for file in files %}
                     <div class="file-item">
-                        <span>{{ file }}</span>
+                        <span>{{ file.name }} <small style="color: #666;">({{ 'S3' if file.storage == 's3' else 'Local' }})</small></span>
                         <div class="file-actions">
-                            <a href="{{ url_for('view_file', filename=file) }}" class="open-btn" target="_blank">Open</a>
+                            <a href="{{ url_for('extract_text', storage=file.storage, filename=file.name) }}" class="open-btn" style="background: #28a745;">Extract Text</a>
                             {% if session.username == 'admin' %}
-                                <form method="POST" action="{{ url_for('delete_file', filename=file) }}" style="display: inline;" onsubmit="return confirm('Delete {{ file }}?')">
+                                <form method="POST" action="{{ url_for('delete_file', storage=file.storage, filename=file.name) }}" style="display: inline;" onsubmit="return confirm('Delete {{ file.name }}?')">
                                     <button type="submit" class="delete-btn">Delete</button>
                                 </form>
                             {% endif %}
@@ -78,8 +88,15 @@
                     </div>
                 {% endfor %}
             {% else %}
-                <p>No files uploaded yet.</p>
+                <p>No files found{% if current_filter != 'all' %} in {{ current_filter.upper() }} storage{% endif %}.</p>
+                {% if current_filter != 'all' %}
+                    <p><a href="{{ url_for('file_list', filter='all') }}">View all files</a></p>
+                {% endif %}
             {% endif %}
+            
+            <div style="margin-top: 20px; font-size: 12px; color: #666;">
+                <strong>Debug:</strong> Current filter: {{ current_filter }}, Files found: {{ files|length }}
+            </div>
         </div>
     </div>
 </body>

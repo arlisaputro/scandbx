@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Extracted Text</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .text-box { border: 1px solid #ccc; padding: 20px; background: #f9f9f9; white-space: pre-wrap; }
+        .back-btn { margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="back-btn">
+            <a href="{{ url_for('file_list') }}">&larr; Back to Files</a>
+        </div>
+        <h2>Extracted Text from: {{ filename }}</h2>
+        <div class="text-box">{{ text }}</div>
+    </div>
+</body>
+</html>

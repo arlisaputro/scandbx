@@ -47,6 +47,20 @@
         {% endwith %}
         
         <form method="POST" action="{{ url_for('upload_file') }}" enctype="multipart/form-data" id="uploadForm">
+            <div style="margin-bottom: 20px;">
+                <label style="font-weight: bold; margin-bottom: 10px; display: block;">Storage Location:</label>
+                <div style="display: flex; gap: 20px;">
+                    <label style="display: flex; align-items: center; cursor: pointer;">
+                        <input type="radio" name="storage" value="s3" style="margin-right: 8px;">
+                        AWS S3 (Cloud) {% if not s3_available %}<small style="color: #dc3545;">(Not Available)</small>{% endif %}
+                    </label>
+                    <label style="display: flex; align-items: center; cursor: pointer;">
+                        <input type="radio" name="storage" value="local" checked style="margin-right: 8px;">
+                        Local Folder
+                    </label>
+                </div>
+            </div>
+            
             <div class="upload-area" id="uploadArea">
                 <div>
                     <h3>Drop your file here or click to browse</h3>
