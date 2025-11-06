@@ -10,8 +10,10 @@ app.secret_key = 'your-secret-key-change-this'
 app.config['S3_BUCKET'] = 'scandbx-file-bucket'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 
-# Initialize S3 client
-s3_client = boto3.client('s3', region_name='ap-southeast-3')
+# Initialize S3 client with explicit config
+from botocore.config import Config
+s3_config = Config(region_name='ap-southeast-3', signature_version='s3v4')
+s3_client = boto3.client('s3', config=s3_config)
 
 # Simple user storage (use database in production)
 users = {
